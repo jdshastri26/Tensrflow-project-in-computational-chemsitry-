@@ -1,0 +1,53 @@
+# File path: /mnt/data/chemistry_model.py
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+# Step 1: Load the dataset
+# For this example, let's assume we have a CSV file named 'molecular_data.csv'
+# with columns 'descriptor_1', 'descriptor_2', ..., 'descriptor_n', 'heat_of_formation'
+
+data = pd.read_csv('/mnt/data/molecular_data.csv')
+
+# Step 2: Preprocess the data
+# Separate features and target
+X = data.drop(columns=['heat_of_formation']).values
+y = data['heat_of_formation'].values
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Normalize the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 3: Build the model
+model = Sequential([
+    Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    Dense(64, activation='relu'),
+    Dense(1)
+])
+
+# Step 4: Compile the model
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+
+# Step 5: Train the model
+model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2)
+
+# Step 6: Evaluate the model
+mse = model.evaluate(X_test, y_test)
+print(f"Mean Squared Error on Test Data: {mse}")
+
+# Step 7: Predict new values
+# Assume we have new molecular descriptors to predict
+new_data = np.array([[0.5, -0.2, 1.3, 0.8, -0.5, 1.1]])  # Example new data
+new_data = scaler.transform(new_data)
+predictions = model.predict(new_data)
+print(f"Predicted Heat of Formation: {predictions[0][0]}")
